@@ -372,13 +372,16 @@ class GossipServer:
             logger.exception(f'Unable to unpack {data!r}')
             return
         if isinstance(data, NodeInfo):
-            data.ip = remote_ip
             if data.random_seed == self.node_info.random_seed:
                 # It's us. Disgard.
                 logger.debug(f'[NodeInfo] Heard back from ourselves {data!r}')
                 return
+            data.ip = ipaddress.IPv4Address(remote_ip)
+            logger.debug(f'[NodeInfo] Heard from a stranger at {remote_ip} -> {data!r}!')
             asyncio.ensure_future(self.nodes.update(data, self.loop))
+
             logger.debug(f'Send ok to {remote_ip}:{self.gossip_port}')
+            # Todo: Use this as a way to sync state?
             self.broadcast_transport.sendto(b'Ok', (remote_ip, self.gossip_port+1))
             return
         if data.startswith(b'heartbeat'):

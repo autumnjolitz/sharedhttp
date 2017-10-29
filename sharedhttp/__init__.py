@@ -435,7 +435,7 @@ class GossipServer:
             self.broadcast_transport.sendto(response, (remote_ip, self.gossip_port+1))
         elif data.startswith(b'IAMA'):
             data = data[len(b'IAMA'):]
-            length, data = data.split('.', 1)
+            length, data = data.split(b'.', 1)
             if len(data) != length:
                 logger.warn(f'Corrupted data from {remote_ip}')
                 return

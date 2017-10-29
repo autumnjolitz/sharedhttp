@@ -1,3 +1,4 @@
+import pprint
 import asyncio
 import functools
 import hashlib
@@ -175,7 +176,7 @@ async def check_version(request):
 async def list_info(request):
     primary_ip = get_ip()
     logger.info(f'Me: {request.server.node_info!r}')
-    logger.info(f'Them: {request.server.nodes.nodes}')
+    logger.info(f'Them: {pprint.pformat(dict(request.server.nodes))}')
     return await request.render_async(
         'index.html', nodes=request.server.nodes, root=request.share_root,
         server=request.server, primary_hostname=socket.gethostname(),

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Shared HTTP Server</title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <header>
+        <h1>Welcome to a Shared HTTP Server</h1>
+    </header>
+    <div>
+        <h2>Node Status</h2>
+        {% for node, ips in nodes %}
+        <div name="node-{{node.secret}}">
+            <h3>{{node.host.exploded}} on port {{node.port}} (UUID: {{node.secret}})</h3>
+            {% if node.routeable %}
+                <p>Reachable: <span style="color:green">Yes</span></p>
+                <div>
+                    <a href="http://{{node.host}}:{{node.port}}/">http://{{node.host}}:{{node.port}}/</a>
+                </div>
+                <div>
+                    <a href="http://{{node.host}}:{{node.port}}/shared/">http://{{node.host}}:{{node.port}}/shared/</a>
+                </div>
+            {% else %}
+                <p>Reachable: <span style="color:red">No</span></p>
+                <!-- Todo: Support proxified requests -->
+            {% endif %}
+            <h4>IP Addresses:</h4>
+            <ul>
+                {% for ip in ips %}
+                    <li>{{ip}} (Seen {{ips[ip].age_readable}} ago)</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

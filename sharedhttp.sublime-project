@@ -1,0 +1,11 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+    "settings": {
+        "python_interpreter": "~/.virtualenvs/cpython36/bin/python3.6",
+    }
+}

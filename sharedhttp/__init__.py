@@ -228,6 +228,45 @@ class NodeManager:
             logger.info(f'Switching {item!r} from {item.ip!s} -> {best_ip}')
             item.ip = ipaddress.IPv4Address(best_ip)
 
+    async def refresh(self, loop):
+        futures = {}
+        lost_nodes = not self.nodes
+        for secret in tuple(self.nodes.keys()):
+            node = self.nodes[secret]
+            ips = self.secret_ips[secret]
+            if not node.routeable:
+                future = node.check_routeable(loop)
+                futures[future] = secret
+                continue
+            for index in range(-1, -len(ips)-1, -1):
+                ip = ips[index]
+                if ip.expired:
+                    del ips[index]
+                    del self.ips[ip]
+
+            if not self.secret_ips[secret]:
+                logger.debug(f'Forgetting about {node}')
+                del self.nodes[secret]
+                del self.secret_ips[secret]
+                lost_nodes = True
+        if futures:
+            results, _ = await asyncio.wait(futures)
+            for future in results:
+                secret = futures[future]
+                result = future.result()
+                node = self.nodes[secret]
+                if not result:
+                    logger.debug(f'{node} is not routeable despite checks. Removing.')
+                    del self.nodes[secret]
+                    ips = self.secret_ips.pop(secret)
+                    for ip in ips:
+                        del self.ips[ip]
+                    lost_nodes = True
+                    continue
+                logger.debug(f'{node} is live.')
+                assert node.routeable
+        return lost_nodes
+
     def __iter__(self):
         for secret in self.nodes:
             ips = self.secret_ips[secret]
@@ -288,8 +327,20 @@ class GossipServer:
         if self.state == States.INITIALIZED:
             self.state = States.ANNOUNCING
             self.broadcast_message(self.node_info.to_msgpack())
-        await asyncio.sleep(5)
+            self.state = States.WAITING
+            await asyncio.sleep(5)
+            asyncio.ensure_future(self.heartbeat(), loop=self.loop)
+            return
+
         self.broadcast_message(f'heartbeat{self.node_info.random_seed}')
+        if (await self.nodes.refresh()):
+            self.state = States.REBUILDING
+
+        if self.state == States.REBUILDING:
+            self.broadcast_message(self.node_info.to_msgpack())
+            self.state = States.WAITING
+
+        await asyncio.sleep(5)
         asyncio.ensure_future(self.heartbeat(), loop=self.loop)
 
     def broadcast_message(self, data):

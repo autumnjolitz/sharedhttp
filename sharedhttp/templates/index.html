@@ -11,10 +11,23 @@
         <h1>Welcome to a Shared HTTP Server</h1>
     </header>
     <div>
-        <h2>Node Status</h2>
+        <h2>Preamble</h2>
+        <p>This is a Sanic webservice that mindlessly shares the current root {{root}} on a host that primarily calls itself {{primary_hostname}} ({{primary_ip}}). You may browse the offered files at <a name="shared" href="/shared/">/shared/</a></p>
+    </div>
+    <div>
+        {% if not nodes %}
+            <h4 name="node-status">No Nodes Found</h4>
+            <p>
+                There are no other nodes detected using multicast address casts. Start up another sharedhttp service via <span style="text-decoration: bold">python -m sharedhttp {{server.http_port}} {{server.gossip_port}}</span>
+            </p>
+        {% else %}
+            <h2 name="node-status">Node Status</h2>
+        {% endif %}
+        {{nodes}}
         {% for node, ips in nodes %}
-        <div name="node-{{node.secret}}">
-            <h3>{{node.host.exploded}} on port {{node.port}} (UUID: {{node.secret}})</h3>
+        <div name="node-{{node.random_seed}}">
+            <h3>{{node.host.exploded}} on port {{node.port}}</h3>
+            <smaller>(UUID: {{node.random_seed}})</smaller>
             {% if node.routeable %}
                 <p>Reachable: <span style="color:green">Yes</span></p>
                 <div>

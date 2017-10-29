@@ -149,6 +149,23 @@ class NodeInfo:
 http_routes = Blueprint(__name__)
 
 
+def get_ip():
+    '''
+    Get primary routeable ip,
+    From: https://stackoverflow.com/a/28950776/367120
+    '''
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+
 @http_routes.route('/version')
 async def check_version(request):
     return response.json({'name': 'sharedhttp', 'version': __version__})
@@ -156,9 +173,13 @@ async def check_version(request):
 
 @http_routes.route('/')
 async def list_info(request):
-    logger.info(f'{request.server.node_info!r}')
-    nodes = itertools.chain(((request.server.node_info, []),), request.server.nodes)
-    return await request.render_async('index.html', nodes=nodes)
+    primary_ip = get_ip()
+    logger.info(f'Me: {request.server.node_info!r}')
+    logger.info(f'Them: {request.server.nodes.nodes}')
+    return await request.render_async(
+        'index.html', nodes=request.server.nodes, root=request.share_root,
+        server=request.server, primary_hostname=socket.gethostname(),
+        primary_ip=primary_ip)
 
 
 @http_routes.route('/shared/')
@@ -233,6 +254,7 @@ class NodeManager:
     async def update(self, item, loop):
         assert isinstance(item, NodeInfo)
         assert int(item.host), f'{item} lacks a non-zero host address!'
+        logger.debug('Update with {item!s}')
         await item.check_routeable(loop)
 
         if item.random_seed not in self.nodes:
@@ -400,6 +422,32 @@ class GossipServer:
         This handles when we broadcast to others and want to handle their response
         '''
         logger.debug(f'{addr} responded to inquiry with {data!r}')
+        remote_ip, _ = addr
+        if data == b'Ok':
+            if addr not in self.nodes.ips:
+                # I don't recognize this node. It should identify itself.
+                self.broadcast_transport.sendto(
+                    b'WhoAreYou?', (remote_ip, self.gossip_port+1))
+                return
+        elif data == b'WhoAreYou?':
+            response = self.node_info.to_msgpack()
+            response = b'IAMA%i.%s' % (len(response), response)
+            self.broadcast_transport.sendto(response, (remote_ip, self.gossip_port+1))
+        elif data.startswith(b'IAMA'):
+            data = data[len(b'IAMA'):]
+            length, data = data.split('.', 1)
+            if len(data) != length:
+                logger.warn(f'Corrupted data from {remote_ip}')
+                return
+            try:
+                data = msgpack.unpackb(data)
+                data = load_data(data)
+            except Exception:
+                logger.exception(f'Unable to parse IAMA from {remote_ip}')
+                return
+            assert isinstance(data, NodeInfo)
+            data.host = remote_ip
+            asyncio.ensure_future(self.nodes.update(data, self.loop))
 
     def on_remote_request(self, data, addr):
         '''

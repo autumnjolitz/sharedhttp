@@ -87,7 +87,7 @@ class NodeInfo:
             return False
         else:
             writer.write(b'GET /version HTTP/1.1\r\n')
-            writer.write(b'Host: {}\r\n'.format(str(self.host).encode('ascii')))
+            writer.write(b'Host: %s\r\n' % (str(self.host).encode('ascii'),))
             writer.write(b'Connection: close\r\n\r\n')
             await writer.drain()
             data = await reader.read(-1)

@@ -200,18 +200,18 @@ class NodeManager:
             # New node!
             self.nodes[item.random_seed] = item
             # if we don't hear from it in 5 mins, it's dead
-            self.ips[str(item.ip)] = TTL(max_ttl=5*60)
-            self.secret_ips[item.random_seed] = [str(item.ip)]  # make copy of ip.
+            self.ips[str(item.host)] = TTL(max_ttl=5*60)
+            self.secret_ips[item.random_seed] = [str(item.host)]  # make copy of ip.
             return
         # We've seen you before. Do you have a new ip? Is the old one reachable?
         ips = self.secret_ips[item.random_seed]
-        if str(item.ip) in self.ips:
+        if str(item.host) in self.ips:
             # Same old ip?
-            ttl = self.ips[str(item.ip)]
+            ttl = self.ips[str(item.host)]
             ttl.start = time.time()
         else:
-            self.ips[str(item.ip)] = TTL(max_ttl=5*60)
-            ips.append((str(item.ip)))
+            self.ips[str(item.host)] = TTL(max_ttl=5*60)
+            ips.append((str(item.host)))
         for index, ip, ttl in (
                 (index, ips[index], self.ips[ips[index]]) for index in range(len(ips)-1, -1, -1)):
             if ttl.expired:
@@ -220,14 +220,14 @@ class NodeManager:
         if not ips:
             del self.nodes[item.random_seed]
             assert item.random_seed not in self.nodes
-            assert item.ip.exploded not in self.ips
+            assert item.host.exploded not in self.ips
             assert item.random_seed not in self.secret_ips
             logger.warn('Node {item!r} was removed due to no ips')
             return
         now = time.time()
         best_ip = min(ips, key=lambda obj: now - self.ips[obj])
-        if best_ip != item.ip.exploded:
-            logger.info(f'Switching {item!r} from {item.ip!s} -> {best_ip}')
+        if best_ip != item.host.exploded:
+            logger.info(f'Switching {item!r} from {item.host!s} -> {best_ip}')
             item.host = ipaddress.IPv4Address(best_ip)
 
     async def refresh(self, loop):

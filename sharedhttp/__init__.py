@@ -57,6 +57,8 @@ def load_data(item):
 
 @register_msgpack
 class NodeInfo:
+    __slots__ = ('host', 'port', 'random_seed', 'routeable')
+
     async def check_routeable(self, loop):
         future = asyncio.open_connection(host=str(self.host), port=self.port)
         try:
@@ -227,7 +229,7 @@ class NodeManager:
         best_ip = min(ips, key=lambda obj: now - self.ips[obj])
         if best_ip != item.ip.exploded:
             logger.info(f'Switching {item!r} from {item.ip!s} -> {best_ip}')
-            item.ip = ipaddress.IPv4Address(best_ip)
+            item.host = ipaddress.IPv4Address(best_ip)
 
     async def refresh(self, loop):
         futures = {}
@@ -374,9 +376,8 @@ class GossipServer:
         if isinstance(data, NodeInfo):
             if data.random_seed == self.node_info.random_seed:
                 # It's us. Disgard.
-                logger.debug(f'[NodeInfo] Heard back from ourselves {data!r}')
                 return
-            data.ip = ipaddress.IPv4Address(remote_ip)
+            data.host = ipaddress.IPv4Address(remote_ip)
             logger.debug(f'[NodeInfo] Heard from a stranger at {remote_ip} -> {data!r}!')
             asyncio.ensure_future(self.nodes.update(data, self.loop))
 

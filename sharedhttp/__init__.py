@@ -60,6 +60,7 @@ class NodeInfo:
     __slots__ = ('host', 'port', 'random_seed', 'routeable')
 
     async def check_routeable(self, loop):
+        logger.debug(f'Asked to check routeability of {self!s}')
         future = asyncio.open_connection(host=str(self.host), port=self.port)
         try:
             reader, writer = await asyncio.wait_for(future, timeout=5)
@@ -68,7 +69,7 @@ class NodeInfo:
             self.routeable = False
             return False
         else:
-            writer.write(b'GET /version HTTP/1.1\r\n\r\n')
+            writer.write(b'GET /version HTTP/1.0\r\n\r\n')
             await writer.drain()
             data = await reader.read(-1)
             logger.debug(f'{self.host.exploded}:{self.port} -> {data!r}')
@@ -89,6 +90,9 @@ class NodeInfo:
     def __repr__(self):
         return f'{self.__class__.__name__}({self.host!r}, {self.port!r}, {self.random_seed!r}, {self.routeable!r})'
 
+    def __str__(self):
+        return f'{self.__class__.__name__}<{self.host!s}:{self.port}, {self.routeable}>'
+
     def checksum(self):
         hasher = hashlib.sha256()
         hasher.update(self.__class__.__name__.encode('ascii'))
@@ -107,7 +111,8 @@ class NodeInfo:
     def from_msgpack(cls, data, checksum):
         ip, port, seed, routeable = data
         item = cls(ipaddress.IPv4Address(ip), port, seed, routeable)
-        assert item.checksum() == checksum, f'{item.checksum()!r} != {checksum!r}'
+        assert item.checksum() == checksum, \
+            f'{item.checksum().encode("ascii")} != {checksum.encode("ascii")}'
         return item
 
 
@@ -225,7 +230,7 @@ class NodeManager:
             assert item.random_seed not in self.nodes
             assert item.host.exploded not in self.ips
             assert item.random_seed not in self.secret_ips
-            logger.warn('Node {item!r} was removed due to no ips')
+            logger.warn('Node {item!s} was removed due to no ips')
             return
         now = time.time()
         best_ip = min(ips, key=lambda obj: now - self.ips[obj])

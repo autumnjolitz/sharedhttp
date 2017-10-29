@@ -1,40 +1,36 @@
-Template for defining Python modules
--------------------------------------
+Shared HTTP
+--------------
 
-This is a template designed to make it quick to bootstrap an installable Python module for private and professional purposes. It is based upon several issues and patterns I've experienced in deploying Python services and libraries.
+Experiment in "What if I could combine `python -m http.server` with autodiscovery?"
 
-Python's unit of software distribution is a module. Most modules will have a ``setup.py`` or a ``setup.cfg`` defined. This approach has the following benefits:
+Normal people use Dropbox for things like that. But why pay for that? Why even sign up?
 
-    - dependencies can be declared and automatically installed/upgraded
-    - one doesn't need to ``cd`` to a specific directory to start a service
-    - Easy upgrade path
-        + No issues with stale ``.pyc`` files
+Not I, the author.
+
+Installation
+---------------
+
+If you're using OSX or Linux, you probably can just ``pip install git+https://github.com/benjolitz/sharedhttp.git``
+
+If you're on Windows, it gets a bit more tricksy. Here's what I did to make my Windows laptop play nice:
+
+#. Install Python3.6 for all users (Is that really necessary?)
+#. Install Git into your system path (I did that a long time ago. Worth it.)
+#. Open up a Command Prompt (ew!), navigate to where you make your software checkouts. (I usually use ``F:/Documents/Software``)
+#. ``git clone git@github.com/channelcat/sanic.git``
+#. Install the `Visual C++ 2015 Build Tools <http://landinghub.visualstudio.com/visual-cpp-build-tools>`_
+#. ``set SANIC_NO_UVLOOP=true``
+#. ``python -m pip install .``
+#. Now installing sharedhttp will work via ``pip install git+https://github.com/benjolitz/sharedhttp.git``
+
+Running
+----------
+
+Navigate to the directory you want to share, then type ``python -m sharedhttp``
+
+An http server will become ready at http://localhost:8080/
+
+If you have two machines running sharedhttp that are multicast-capable and on the same network, they should see each other and appear in the *Node Status* listing.
 
 
-Python modules can create source distributions (``sdist``) and binary distributions (``bdist_wheel``). This plays very nicely with a PyPI mirror, which allows for complex projects to be installed/updated on a routine basis.
 
-There are several key points in a pain-free install:
-    - setup.py
-    - MANIFEST.in (necessary if you have non-Python files in your project)
-    - README.rst (README.md will require you to add README.md to MANIFEST.in)
-
-In addition, you are suggested to follow the basic structure of ``module_template``.
-
-Please note that ``module_template`` is just a name and you can freely rename it to reflect your
-wishes. Just be sure to update your ``setup.py``, your ``about.py`` and (if you have it defined) a ``MANIFEST.in``
-
---------------------------
-Expected Behavior
---------------------------
-
-It is expected that all your business logic and assets will be in your project folder (currently named ``module_template`` with an ``__init__.py`` defined).
-
-----------------------------
-Including non Python files
-----------------------------
-
-``find_packages()`` will create a file listing for an install by looking for ``__init__.py`` files. 
-
-In that case, you want a MANIFEST.in to graft those folders into the finalized modular installation.
-
-Please see MANIFEST.in for more details.

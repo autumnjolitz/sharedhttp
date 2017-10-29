@@ -196,7 +196,7 @@ class NodeManager:
         assert int(item.host), f'{item} lacks a non-zero host address!'
         await item.check_routeable(loop)
 
-        if item.secret not in self.nodes:
+        if item.random_seed not in self.nodes:
             # New node!
             self.nodes[item.secret] = item
             # if we don't hear from it in 5 mins, it's dead
@@ -219,9 +219,9 @@ class NodeManager:
                 del ips[index]
         if not ips:
             del self.nodes[item.secret]
-            assert item.secret not in self.nodes
+            assert item.random_seed not in self.nodes
             assert item.ip.exploded not in self.ips
-            assert item.secret not in self.secret_ips
+            assert item.random_seed not in self.secret_ips
             logger.warn('Node {item!r} was removed due to no ips')
             return
         now = time.time()

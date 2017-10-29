@@ -46,28 +46,28 @@ Oh, I bet you're absolutely enthralled at this idea. So much that you want to se
     :align: center
 
 
-** Found another node **
+**Found another node**
 
 .. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/02found_others.png
     :alt: Bootstrap complete, found one other node (My Windows Laptop)
     :width: 835
     :align: center
 
-** What happens when you follow that link to the other nodes **
+**What happens when you follow that link to the other nodes**
 
 .. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/03navigate_to_other.png
     :alt: Navigation to the other machine
     :width: 835
     :align: center
 
-** Hey look, a file listing! **
+**Hey look, a file listing!**
 
 .. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/04show_other_files.png
     :alt: Showing the other node's files
     :width: 835
     :align: center
 
-** Let's get a file **
+**Let's get a file**
 
 .. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/05getfile.png
     :alt: Getting a file

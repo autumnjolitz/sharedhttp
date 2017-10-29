@@ -166,7 +166,8 @@ class TTL:
 
     @property
     def age_readable(self):
-        minutes, seconds = divmod(self.age, 60)
+        seconds = int(self.age)
+        minutes, seconds = divmod(seconds, 60)
         if not minutes:
             return f'{seconds} seconds'
         hours, minutes = divmod(minutes, 60)

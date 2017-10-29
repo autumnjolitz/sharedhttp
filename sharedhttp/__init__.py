@@ -327,7 +327,7 @@ class GossipServer:
                 return
             asyncio.ensure_future(self.nodes.update(data, self.loop))
             logger.debug(f'Send ok to {remote_ip}:{self.gossip_port}')
-            # self.broadcast_transport.sendto(b'Ok', (remote_ip, self.gossip_port))
+            self.broadcast_transport.sendto(b'Ok', (remote_ip, self.gossip_port+1))
             return
         if data.startswith(b'heartbeat'):
             secret = data[len(b'heartbeat')+1:]
@@ -335,7 +335,7 @@ class GossipServer:
                 logger.debug(f'[Beat] Heard back from ourselves {data!r}')
                 return
             if secret not in self.nodes:
-                logger.debug(f'Unknown client {remote_ip} presents {secret}')
+                # logger.debug(f'Unknown client {remote_ip} presents {secret}')
                 return
             if remote_ip in self.nodes.ips:
                 self.nodes.ips[remote_ip].refresh()
@@ -372,6 +372,12 @@ class GossipServer:
             socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, multicast_request)
 
         self.gossip_broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # You can always send a message to the broadcaster directly on gossip_port+1
+        if SUPPORTS_REUSEABLE_SOCKET:
+            self.gossip_broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self.gossip_broadcast_socket.bind((ip, gossip_port+1))
+        # Set the multicast-bound packets to have zero ttl, meaning they don't escape
+        # the network
         ttl = struct.pack('b', 1)
         self.gossip_broadcast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 

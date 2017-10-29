@@ -192,6 +192,7 @@ class NodeManager:
 
     async def update(self, item, loop):
         assert isinstance(item, NodeInfo)
+        assert int(item.host), f'{item} lacks a non-zero host address!'
         await item.check_routeable(loop)
 
         if item.secret not in self.nodes:

@@ -2,7 +2,7 @@ import asyncio
 import functools
 import hashlib
 import ipaddress
-import itertools
+import base64
 import logging
 import os
 import secrets
@@ -254,7 +254,7 @@ class NodeManager:
     async def update(self, item, loop):
         assert isinstance(item, NodeInfo)
         assert int(item.host), f'{item} lacks a non-zero host address!'
-        logger.debug('Update with {item!s}')
+        logger.debug(f'Update with {item!s}')
         await item.check_routeable(loop)
 
         if item.random_seed not in self.nodes:
@@ -354,6 +354,8 @@ class GossipServer:
         self.app = Sanic(__name__, request_class=Request)
 
         self.jinja = SanicJinja2(enable_async=True)
+        self.jinja.env.filters['base64'] = \
+            lambda item: base64.urlsafe_b64encode(item).decode('ascii')
 
         @self.app.middleware('request')
         async def add_jinja_to_request(request):
@@ -483,7 +485,9 @@ class GossipServer:
             if remote_ip in self.nodes.ips:
                 self.nodes.ips[remote_ip].refresh()
             else:
-                logger.error(f'{remote_ip} is unknown but secret {secret} belongs to {self.nodes.nodes[secret]}')
+                logger.error(
+                    f'{remote_ip} is unknown but secret {secret} belongs to '
+                    f'{self.nodes.nodes[secret]}')
             return
         logger.debug(f'Disregarding {data!r}')
 

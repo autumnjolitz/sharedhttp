@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Shared HTTP Server</title>
+    <title>Shared HTTP Server on {{primary_hostname}}</title>
     <link rel="stylesheet" href="">
 </head>
 <body>
@@ -23,11 +23,10 @@
         {% else %}
             <h2 name="node-status">Node Status</h2>
         {% endif %}
-        {{nodes}}
         {% for node, ips in nodes %}
         <div name="node-{{node.random_seed}}">
             <h3>{{node.host.exploded}} on port {{node.port}}</h3>
-            <smaller>(UUID: {{node.random_seed}})</smaller>
+            <small>(UUID: {{node.random_seed | base64 }})</small>
             {% if node.routeable %}
                 <p>Reachable: <span style="color:green">Yes</span></p>
                 <div>

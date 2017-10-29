@@ -333,7 +333,7 @@ class GossipServer:
             return
 
         self.broadcast_message(f'heartbeat{self.node_info.random_seed}')
-        if (await self.nodes.refresh()):
+        if (await self.nodes.refresh(self.loop)):
             self.state = States.REBUILDING
 
         if self.state == States.REBUILDING:

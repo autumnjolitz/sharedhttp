@@ -74,7 +74,7 @@ class NodeInfo:
     async def check_routeable(self, loop):
         if self._flags & NodeFlags.CHECKING_ROUTE == NodeFlags.CHECKING_ROUTE:
             logger.debug(f'Asked to check routeability of {self!s} but already checking it!')
-            return
+
         self._flags |= NodeFlags.CHECKING_ROUTE
 
         logger.debug(f'Asked to check routeability of {self!s}')
@@ -91,6 +91,7 @@ class NodeInfo:
             writer.write(b'Connection: close\r\n\r\n')
             await writer.drain()
             data = await reader.read(-1)
+            _, data = data.split(b'\r\n\r\n')
             try:
                 data = json_loads(data)
             except ValueError:
@@ -100,6 +101,8 @@ class NodeInfo:
             logger.debug(f'{self.host.exploded}:{self.port} -> {data}')
             writer.close()
             self.routeable = True
+        finally:
+            self._flags ^= self._flags & NodeFlags.CHECKING_ROUTE
         return True
 
     def __init__(self, host, port, random_seed, routeable):

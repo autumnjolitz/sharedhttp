@@ -73,7 +73,6 @@ class NodeInfo:
             data = await reader.read(-1)
             logger.debug(f'{self.host.exploded}:{self.port} -> {data!r}')
             writer.close()
-            reader.close()
             self.routeable = True
         return True
 

@@ -33,4 +33,46 @@ An http server will become ready at http://localhost:8080/
 If you have two machines running sharedhttp that are multicast-capable and on the same network, they should see each other and appear in the *Node Status* listing.
 
 
+Screenshots
+------------
+
+Oh, I bet you're absolutely enthralled at this idea. So much that you want to see what it looks like. Well, let's not disappoint, eh?
+
+**Bootstrapping / Waiting for Nodes**
+
+.. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/01bootstrap.png
+    :alt: Bootstrap, no other nodes found
+    :width: 835
+    :align: center
+
+
+** Found another node **
+
+.. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/02found_others.png
+    :alt: Bootstrap complete, found one other node (My Windows Laptop)
+    :width: 835
+    :align: center
+
+** What happens when you follow that link to the other nodes **
+
+.. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/03navigate_to_other.png
+    :alt: Navigation to the other machine
+    :width: 835
+    :align: center
+
+** Hey look, a file listing! **
+
+.. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/04show_other_files.png
+    :alt: Showing the other node's files
+    :width: 835
+    :align: center
+
+** Let's get a file **
+
+.. image:: https://github.com/benjolitz/sharedhttp/blob/screenshots/screenshots/05getfile.png
+    :alt: Getting a file
+    :width: 835
+    :align: center
+
+
 

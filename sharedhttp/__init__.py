@@ -446,7 +446,7 @@ class GossipServer:
                 logger.exception(f'Unable to parse IAMA from {remote_ip}')
                 return
             assert isinstance(data, NodeInfo)
-            data.host = remote_ip
+            data.host = ipaddress.IPv4Address(remote_ip)
             asyncio.ensure_future(self.nodes.update(data, self.loop))
 
     def on_remote_request(self, data, addr):

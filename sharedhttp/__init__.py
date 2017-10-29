@@ -176,13 +176,16 @@ class TTL:
         return time.time() - self.start > self.max_ttl
 
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            return self.start - other
-        raise NotImplementedError
+        return self.start - other
 
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            return self.start + other
+        return self.start + other
+
+    def __rsub__(self, prior):
+        return prior - self.start
+
+    def __radd__(self, prior):
+        return prior + self.start
 
 
 class NodeManager:
@@ -242,7 +245,8 @@ class NodeManager:
                 continue
             for index in range(-1, -len(ips)-1, -1):
                 ip = ips[index]
-                if ip.expired:
+                ttl = self.ips[ip]
+                if ttl.expired:
                     del ips[index]
                     del self.ips[ip]
 

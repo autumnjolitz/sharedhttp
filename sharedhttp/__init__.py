@@ -1,29 +1,36 @@
-from .about import __version__
-__version__  # Silence unused import warning.
-import time
+import asyncio
+import functools
 import hashlib
+import ipaddress
+import itertools
+import logging
+import os
 import secrets
 import socket
-import itertools
-import functools
-import msgpack
-import ipaddress
-import os
 import struct
-import logging
-from enum import Enum
+import time
+from enum import Enum, IntEnum
 
-from sanic import Sanic
+import msgpack
+from sanic import Sanic, response, Blueprint
 from sanic.request import Request as _Request
-from sanic import response, Blueprint
-from signal import signal, SIGINT
 from sanic_jinja2 import SanicJinja2
 
-import asyncio
+from .about import __version__
+
+
+__version__  # Silence unused import warning.
+
+
 try:
     import uvloop
 except ImportError:
     uvloop = None
+
+try:
+    from ujson import loads as json_loads
+except ImportError:
+    from json import loads as json_loads
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +62,21 @@ def load_data(item):
     return item
 
 
+class NodeFlags(IntEnum):
+    INITIALIZED = 1
+    CHECKING_ROUTE = 2
+
+
 @register_msgpack
 class NodeInfo:
-    __slots__ = ('host', 'port', 'random_seed', 'routeable')
+    __slots__ = ('host', 'port', 'random_seed', 'routeable', '_flags')
 
     async def check_routeable(self, loop):
+        if self._flags & NodeFlags.CHECKING_ROUTE == NodeFlags.CHECKING_ROUTE:
+            logger.debug(f'Asked to check routeability of {self!s} but already checking it!')
+            return
+        self._flags |= NodeFlags.CHECKING_ROUTE
+
         logger.debug(f'Asked to check routeability of {self!s}')
         future = asyncio.open_connection(host=str(self.host), port=self.port)
         try:
@@ -69,10 +86,18 @@ class NodeInfo:
             self.routeable = False
             return False
         else:
-            writer.write(b'GET /version HTTP/1.0\r\n\r\n')
+            writer.write(b'GET /version HTTP/1.1\r\n')
+            writer.write(b'Host: {}\r\n'.format(str(self.host).encode('ascii')))
+            writer.write(b'Connection: close\r\n\r\n')
             await writer.drain()
             data = await reader.read(-1)
-            logger.debug(f'{self.host.exploded}:{self.port} -> {data!r}')
+            try:
+                data = json_loads(data)
+            except ValueError:
+                logger.warn(f'{self.host} returned non JSON payload {data}. Disabling!')
+                self.routeable = False
+                return False
+            logger.debug(f'{self.host.exploded}:{self.port} -> {data}')
             writer.close()
             self.routeable = True
         return True
@@ -86,9 +111,11 @@ class NodeInfo:
         self.port = port
         self.random_seed = random_seed
         self.routeable = routeable
+        self._flags = NodeFlags.INITIALIZED
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.host!r}, {self.port!r}, {self.random_seed!r}, {self.routeable!r})'
+        return f'{self.__class__.__name__}({self.host!r}, {self.port!r}, ' \
+            f'{self.random_seed!r}, {self.routeable!r})'
 
     def __str__(self):
         return f'{self.__class__.__name__}<{self.host!s}:{self.port}, {self.routeable}>'

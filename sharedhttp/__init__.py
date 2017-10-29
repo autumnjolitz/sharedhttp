@@ -436,7 +436,7 @@ class GossipServer:
         elif data.startswith(b'IAMA'):
             data = data[len(b'IAMA'):]
             length, data = data.split(b'.', 1)
-            if len(data) != length:
+            if len(data) != int(length):
                 logger.warn(f'Corrupted data from {remote_ip}')
                 return
             try:

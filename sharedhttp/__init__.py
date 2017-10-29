@@ -27,6 +27,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+SUPPORTS_REUSEABLE_SOCKET = hasattr(socket, 'SO_REUSEPORT')
 DEFAULT_HTTP_INET = ipaddress.IPv4Address(0)  # 0.0.0.0
 DEFAULT_GOSSIP_INET = ipaddress.IPv4Address('224.0.0.251')  # multicast
 
@@ -362,7 +363,8 @@ class GossipServer:
         self.gossip_port = gossip_port
 
         self.gossip_recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.gossip_recv_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        if SUPPORTS_REUSEABLE_SOCKET:
+            self.gossip_recv_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.gossip_recv_socket.bind((ip, gossip_port))
 
         multicast_request = struct.pack('4sL', DEFAULT_GOSSIP_INET.packed, socket.INADDR_ANY)
@@ -374,7 +376,8 @@ class GossipServer:
         self.gossip_broadcast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
         self.http_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.http_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        if SUPPORTS_REUSEABLE_SOCKET:
+            self.http_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.http_socket.bind((ip, http_port))
         self.http_socket.listen(max_http_backlog)
 

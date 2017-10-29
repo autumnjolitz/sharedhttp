@@ -198,13 +198,13 @@ class NodeManager:
 
         if item.random_seed not in self.nodes:
             # New node!
-            self.nodes[item.secret] = item
+            self.nodes[item.random_seed] = item
             # if we don't hear from it in 5 mins, it's dead
             self.ips[str(item.ip)] = TTL(max_ttl=5*60)
-            self.secret_ips[item.secret] = [str(item.ip)]  # make copy of ip.
+            self.secret_ips[item.random_seed] = [str(item.ip)]  # make copy of ip.
             return
         # We've seen you before. Do you have a new ip? Is the old one reachable?
-        ips = self.secret_ips[item.secret]
+        ips = self.secret_ips[item.random_seed]
         if str(item.ip) in self.ips:
             # Same old ip?
             ttl = self.ips[str(item.ip)]
@@ -218,7 +218,7 @@ class NodeManager:
                 del self.ips[ip]
                 del ips[index]
         if not ips:
-            del self.nodes[item.secret]
+            del self.nodes[item.random_seed]
             assert item.random_seed not in self.nodes
             assert item.ip.exploded not in self.ips
             assert item.random_seed not in self.secret_ips

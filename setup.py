@@ -35,7 +35,7 @@ if __version__ is None:
     raise IOError('about.py in project lacks __version__!')
 
 setup(name='sharedhttp', version=__version__,
-      author='Ben Jolitz',
+      author='Autumn Jolitz',
       description='Multicast simple HTTP server',
       long_description=long_description,
       license='BSD',
